@@ -325,17 +325,41 @@ class KeynoteGenerator:
         style.configure('Generate.TButton', font=('SF Pro Display', 12, 'bold'))
         
     def _load_templates(self) -> Dict:
-        """템플릿 로드"""
-        templates_dir = "templates"
-        if not os.path.exists(templates_dir):
-            os.makedirs(templates_dir)
+        """config.json에서 템플릿 로드"""
+        templates = {}
         
-        templates = {
-            'Business': {'path': f'{templates_dir}/business.key', 'description': '비즈니스 프레젠테이션'},
-            'Creative': {'path': f'{templates_dir}/creative.key', 'description': '창의적 디자인'},
-            'Minimal': {'path': f'{templates_dir}/minimal.key', 'description': '미니멀 스타일'},
-            'Academic': {'path': f'{templates_dir}/academic.key', 'description': '학술 발표용'}
-        }
+        try:
+            # config.json에서 템플릿 정보 읽기
+            with open('config.json', 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            
+            config_templates = config.get('templates', {})
+            
+            # 각 템플릿을 GUI에서 사용할 형태로 변환
+            for template_id, template_info in config_templates.items():
+                template_name = f"템플릿 {template_id}"
+                if template_info.get('category'):
+                    template_name += f" ({template_info['category']})"
+                
+                templates[template_name] = {
+                    'path': template_info['path'],
+                    'description': template_info.get('description', f'템플릿 {template_id}'),
+                    'category': template_info.get('category', 'basic')
+                }
+        
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"config.json 로딩 실패: {e}")
+            # 폴백: 기존 방식으로 템플릿 스캔
+            templates_dir = "templates"
+            if os.path.exists(templates_dir):
+                key_files = [f for f in os.listdir(templates_dir) if f.endswith('.key')]
+                for key_file in sorted(key_files):
+                    template_name = key_file.replace('.key', '')
+                    templates[f"템플릿 {template_name}"] = {
+                        'path': os.path.join(templates_dir, key_file),
+                        'description': f'템플릿 {template_name}',
+                        'category': 'basic'
+                    }
         
         return templates
     
@@ -411,13 +435,24 @@ AI는 우리의 파트너가 될 것입니다."""
         ttk.Label(settings_frame, text="템플릿 선택:", 
                  style='Header.TLabel').grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
         
-        self.template_var = tk.StringVar(value='Business')
+        self.template_var = tk.StringVar()
+        template_names = list(self.templates.keys())
+        if template_names:
+            self.template_var.set(template_names[0])
+        
         template_combo = ttk.Combobox(settings_frame, textvariable=self.template_var,
-                                     values=list(self.templates.keys()), state='readonly')
+                                     values=template_names, state='readonly')
         template_combo.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
         
         # 템플릿 설명
-        self.template_desc = ttk.Label(settings_frame, text="비즈니스 프레젠테이션",
+        if template_names:
+            initial_desc = self.templates[template_names[0]]['description']
+            initial_category = self.templates[template_names[0]].get('category', 'basic')
+            display_text = f"{initial_desc} [{initial_category}]"
+        else:
+            display_text = "템플릿 없음"
+            
+        self.template_desc = ttk.Label(settings_frame, text=display_text,
                                       font=('SF Pro Display', 10), foreground='gray')
         self.template_desc.grid(row=2, column=0, sticky=tk.W, pady=(0, 15))
         
@@ -463,8 +498,11 @@ AI는 우리의 파트너가 될 것입니다."""
     def on_template_change(self, event):
         """템플릿 변경 이벤트"""
         template_name = self.template_var.get()
-        description = self.templates[template_name]['description']
-        self.template_desc.config(text=description)
+        if template_name in self.templates:
+            description = self.templates[template_name]['description']
+            category = self.templates[template_name].get('category', 'basic')
+            display_text = f"{description} [{category}]"
+            self.template_desc.config(text=display_text)
         
     def add_images(self):
         """이미지 추가"""
@@ -552,6 +590,10 @@ AI는 우리의 파트너가 될 것입니다."""
             
             # 1. 템플릿 확인
             template_name = self.template_var.get()
+            if template_name not in self.templates:
+                messagebox.showerror("오류", f"선택된 템플릿을 찾을 수 없습니다: {template_name}")
+                return
+            
             template_path = self.templates[template_name]['path']
             
             if not os.path.exists(template_path):
