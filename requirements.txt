@@ -1,0 +1,13 @@
+# 🍎 Keynote 자동 생성기 Python 의존성
+# GUI Framework (tkinter는 Python 표준 라이브러리에 포함)
+
+# 이미지 처리
+Pillow>=8.0.0
+
+# 데이터 처리
+typing-extensions>=4.0.0
+
+# 개발 도구 (선택사항)
+pytest>=6.0.0
+black>=21.0.0
+flake8>=3.8.0
