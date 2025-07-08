@@ -1,0 +1,88 @@
+{
+  "app_settings": {
+    "name": "Keynote 자동 생성기",
+    "version": "1.0.0",
+    "debug": false,
+    "auto_save": true
+  },
+  "templates": {
+    "1": {"path": "templates/1.key", "description": "템플릿 1", "category": "basic"},
+    "2": {"path": "templates/2.key", "description": "템플릿 2", "category": "basic"},
+    "3": {"path": "templates/3.key", "description": "템플릿 3", "category": "basic"},
+    "4": {"path": "templates/4.key", "description": "템플릿 4", "category": "basic"},
+    "5": {"path": "templates/5.key", "description": "템플릿 5", "category": "basic"},
+    "6": {"path": "templates/6.key", "description": "템플릿 6", "category": "creative"},
+    "7": {"path": "templates/7.key", "description": "템플릿 7", "category": "creative"},
+    "8": {"path": "templates/8.key", "description": "템플릿 8", "category": "creative"},
+    "9": {"path": "templates/9.key", "description": "템플릿 9", "category": "creative"},
+    "10": {"path": "templates/10.key", "description": "템플릿 10", "category": "business"},
+    "11": {"path": "templates/11.key", "description": "템플릿 11", "category": "business"},
+    "12": {"path": "templates/12.key", "description": "템플릿 12", "category": "business"},
+    "13": {"path": "templates/13.key", "description": "템플릿 13", "category": "business"},
+    "14": {"path": "templates/14.key", "description": "템플릿 14", "category": "minimal"},
+    "15": {"path": "templates/15.key", "description": "템플릿 15", "category": "minimal"},
+    "16": {"path": "templates/16.key", "description": "템플릿 16", "category": "minimal"},
+    "17": {"path": "templates/17.key", "description": "템플릿 17", "category": "academic"},
+    "18": {"path": "templates/18.key", "description": "템플릿 18", "category": "academic"},
+    "19": {"path": "templates/19.key", "description": "템플릿 19", "category": "academic"},
+    "20": {"path": "templates/20.key", "description": "템플릿 20", "category": "presentation"},
+    "21": {"path": "templates/21.key", "description": "템플릿 21", "category": "presentation"},
+    "22": {"path": "templates/22.key", "description": "템플릿 22", "category": "presentation"},
+    "23": {"path": "templates/23.key", "description": "템플릿 23", "category": "special"}
+  },
+  "layout_rules": {
+    "title_slide": {
+      "condition": "text_type == 'title_subtitle' and image_count == 0",
+      "keynote_layout": "Title & Subtitle",
+      "priority": 10
+    },
+    "bullet_slide": {
+      "condition": "text_type == 'bullet_list' and text_length > 100",
+      "keynote_layout": "Title & Bullets",
+      "priority": 9
+    },
+    "image_focus": {
+      "condition": "image_count >= 1 and text_length < 150",
+      "keynote_layout": "Title, Bullets & Photo",
+      "priority": 8
+    },
+    "balanced": {
+      "condition": "image_count == 1 and 150 <= text_length <= 400",
+      "keynote_layout": "Title, Bullets & Photo",
+      "priority": 7
+    },
+    "content_heavy": {
+      "condition": "text_length > 400",
+      "keynote_layout": "Title & Bullets",
+      "priority": 6
+    },
+    "multi_image": {
+      "condition": "image_count > 1",
+      "keynote_layout": "Photo - 3 Up",
+      "priority": 5
+    }
+  },
+  "image_settings": {
+    "supported_formats": [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff"],
+    "max_file_size_mb": 50,
+    "default_position": "right",
+    "default_size": "medium",
+    "positions": {
+      "left": {"x": 50, "y": 150, "width": 280, "height": 180},
+      "right": {"x": 500, "y": 150, "width": 280, "height": 180},
+      "center": {"x": 250, "y": 200, "width": 400, "height": 300}
+    }
+  },
+  "ai_settings": {
+    "text_analysis": true,
+    "image_analysis": true,
+    "layout_optimization": true,
+    "auto_template_selection": true
+  },
+  "ui_settings": {
+    "window_size": {"width": 1200, "height": 900},
+    "theme": "system",
+    "font_size": 11,
+    "auto_analyze": true
+  }
+}
