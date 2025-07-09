@@ -384,17 +384,21 @@ class KeynoteGenerator:
                  style='Header.TLabel').grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
         
         self.text_area = scrolledtext.ScrolledText(input_frame, height=15, width=50,
-                                                  font=('SF Pro Display', 11))
+                                                  font=('SF Pro Display', 11),
+                                                  undo=True, wrap=tk.WORD)
         self.text_area.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), 
                            pady=(0, 10))
+        
+        # 텍스트 편집 기능 추가
+        self._setup_text_editing()
         
         # 샘플 텍스트 삽입
         sample_text = """AI와 미래의 일
 
-AI 기술의 급속한 발전
-• 머신러닝과 딥러닝의 혁신
-• 자연어 처리 기술의 진보
-• 컴퓨터 비전의 놀라운 성과
+AI 기술의 발전
+• 머신러닝의 혁신
+• 자연어 처리 기술
+• 컴퓨터 비전의 발전
 
 일상 생활의 변화
 • 스마트 홈과 IoT 기기
@@ -407,7 +411,12 @@ AI 기술의 급속한 발전
 • 인간-AI 협업의 중요성
 
 결론
-AI는 우리의 파트너가 될 것입니다."""
+AI는 우리의 파트너가 될 것입니다.
+
+💡 팁: 
+- Ctrl+A: 모두 선택
+- Ctrl+C: 복사, Ctrl+V: 붙여넣기, Ctrl+X: 잘라내기
+- 우클릭: 컨텍스트 메뉴"""
         
         self.text_area.insert("1.0", sample_text)
         
@@ -463,8 +472,12 @@ AI는 우리의 파트너가 될 것입니다."""
                  style='Header.TLabel').grid(row=3, column=0, sticky=tk.W, pady=(0, 5))
         
         self.analysis_text = scrolledtext.ScrolledText(settings_frame, height=8, width=40,
-                                                      font=('SF Pro Display', 10))
+                                                      font=('SF Pro Display', 10),
+                                                      undo=True, wrap=tk.WORD)
         self.analysis_text.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        
+        # 분석 결과 창에도 편집 기능 추가
+        self._setup_analysis_text_editing()
         
         # 분석 버튼
         ttk.Button(settings_frame, text="🧠 컨텐츠 분석", 
@@ -494,6 +507,125 @@ AI는 우리의 파트너가 될 것입니다."""
         input_frame.columnconfigure(0, weight=1)
         settings_frame.columnconfigure(0, weight=1)
         image_frame.columnconfigure(0, weight=1)
+    
+    def _setup_text_editing(self):
+        """텍스트 편집 기능 설정"""
+        # 키보드 단축키 바인딩
+        self.text_area.bind('<Control-a>', self._select_all)
+        self.text_area.bind('<Control-c>', self._copy_text)
+        self.text_area.bind('<Control-v>', self._paste_text)
+        self.text_area.bind('<Control-x>', self._cut_text)
+        self.text_area.bind('<Control-z>', self._undo_text)
+        
+        # 마우스 우클릭 컨텍스트 메뉴
+        self.context_menu = tk.Menu(self.root, tearoff=0)
+        self.context_menu.add_command(label="잘라내기 (Ctrl+X)", command=self._cut_text)
+        self.context_menu.add_command(label="복사 (Ctrl+C)", command=self._copy_text)
+        self.context_menu.add_command(label="붙여넣기 (Ctrl+V)", command=self._paste_text)
+        self.context_menu.add_separator()
+        self.context_menu.add_command(label="모두 선택 (Ctrl+A)", command=self._select_all)
+        self.context_menu.add_separator()
+        self.context_menu.add_command(label="실행 취소 (Ctrl+Z)", command=self._undo_text)
+        
+        # 우클릭 이벤트 바인딩
+        self.text_area.bind('<Button-3>', self._show_context_menu)  # 우클릭
+        self.text_area.bind('<Control-Button-1>', self._show_context_menu)  # Ctrl+클릭 (Mac 호환)
+    
+    def _setup_analysis_text_editing(self):
+        """분석 결과 텍스트 편집 기능 설정"""
+        # 키보드 단축키 바인딩
+        self.analysis_text.bind('<Control-a>', self._select_all_analysis)
+        self.analysis_text.bind('<Control-c>', self._copy_analysis)
+        
+        # 마우스 우클릭 컨텍스트 메뉴 (읽기 전용)
+        self.analysis_context_menu = tk.Menu(self.root, tearoff=0)
+        self.analysis_context_menu.add_command(label="복사 (Ctrl+C)", command=self._copy_analysis)
+        self.analysis_context_menu.add_command(label="모두 선택 (Ctrl+A)", command=self._select_all_analysis)
+        
+        # 우클릭 이벤트 바인딩
+        self.analysis_text.bind('<Button-3>', self._show_analysis_context_menu)
+        self.analysis_text.bind('<Control-Button-1>', self._show_analysis_context_menu)
+    
+    def _select_all_analysis(self, event=None):
+        """분석 결과 모두 선택"""
+        self.analysis_text.tag_add(tk.SEL, "1.0", tk.END)
+        self.analysis_text.mark_set(tk.INSERT, "1.0")
+        self.analysis_text.see(tk.INSERT)
+        return 'break'
+    
+    def _copy_analysis(self, event=None):
+        """분석 결과 복사"""
+        try:
+            if self.analysis_text.tag_ranges(tk.SEL):
+                self.root.clipboard_clear()
+                text = self.analysis_text.get(tk.SEL_FIRST, tk.SEL_LAST)
+                self.root.clipboard_append(text)
+        except tk.TclError:
+            pass
+        return 'break'
+    
+    def _show_analysis_context_menu(self, event):
+        """분석 결과 컨텍스트 메뉴 표시"""
+        try:
+            self.analysis_context_menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self.analysis_context_menu.grab_release()
+    
+    def _select_all(self, event=None):
+        """모두 선택"""
+        self.text_area.tag_add(tk.SEL, "1.0", tk.END)
+        self.text_area.mark_set(tk.INSERT, "1.0")
+        self.text_area.see(tk.INSERT)
+        return 'break'
+    
+    def _copy_text(self, event=None):
+        """복사"""
+        try:
+            if self.text_area.tag_ranges(tk.SEL):
+                self.root.clipboard_clear()
+                text = self.text_area.get(tk.SEL_FIRST, tk.SEL_LAST)
+                self.root.clipboard_append(text)
+        except tk.TclError:
+            pass
+        return 'break'
+    
+    def _cut_text(self, event=None):
+        """잘라내기"""
+        try:
+            if self.text_area.tag_ranges(tk.SEL):
+                self.root.clipboard_clear()
+                text = self.text_area.get(tk.SEL_FIRST, tk.SEL_LAST)
+                self.root.clipboard_append(text)
+                self.text_area.delete(tk.SEL_FIRST, tk.SEL_LAST)
+        except tk.TclError:
+            pass
+        return 'break'
+    
+    def _paste_text(self, event=None):
+        """붙여넣기"""
+        try:
+            clipboard_text = self.root.clipboard_get()
+            if self.text_area.tag_ranges(tk.SEL):
+                self.text_area.delete(tk.SEL_FIRST, tk.SEL_LAST)
+            self.text_area.insert(tk.INSERT, clipboard_text)
+        except tk.TclError:
+            pass
+        return 'break'
+    
+    def _undo_text(self, event=None):
+        """실행 취소"""
+        try:
+            self.text_area.edit_undo()
+        except tk.TclError:
+            pass
+        return 'break'
+    
+    def _show_context_menu(self, event):
+        """컨텍스트 메뉴 표시"""
+        try:
+            self.context_menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self.context_menu.grab_release()
         
     def on_template_change(self, event):
         """템플릿 변경 이벤트"""
